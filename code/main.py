@@ -102,6 +102,7 @@ def main():
 	    error.append(eig[i][0].sum() - sum_20)
 
 	#plotting and displaying the error
+	
 	df_error = pd.DataFrame(error)
 	bar_graph = df_error.plot(kind='bar',title='PCA Error Per Category', figsize=(10,8),fontsize=12, legend=False)
 	bar_graph.set_ylabel("Error",fontsize=12)
