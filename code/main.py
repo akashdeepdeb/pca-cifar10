@@ -15,7 +15,8 @@ data_dir = '../data/'
 results_dir = '../results/'
 names = ['airplane','automobile','bird','cat','deer','dog','frog','horse','ship','truck']
 
-def main():
+
+def get_data():
 	#unpickle items
 	data_batch_1 = unpickle(data_dir + 'data_batch_1')
 	data_batch_2 = unpickle(data_dir + 'data_batch_2')
@@ -53,17 +54,11 @@ def main():
 	df_labels = pd.DataFrame(df_labels)
 	df = pd.concat([df_data,df_labels],axis=1)
 
-	#Separate data by labels and compute mean image for each label
-	data, mean = [], []
-	for i in range(0,10):
-	    data.append(df[df['labels']==i])
-	    data[i] = data[i].drop(['labels'],axis=1)
-	    mean_arr = np.mean(data[i],axis=0)
-	    mean.append(mean_arr)
-	    data[i] = data[i].as_matrix()
+	return df
 
-	#save images
-	'''
+
+
+def print_mean(mean):
 	for i, arr in enumerate(mean):
 		im_arr = np.zeros((32,32,3), 'uint8')
 		im = np.array(arr)
@@ -74,8 +69,10 @@ def main():
 		#io.imsave(results_dir + names[i] + '_mean.png', im)
 		Image.fromarray(im_arr, 'RGB').save(results_dir + names[i] + '_mean.png')
 	return
-	'''
 
+
+
+def covmat_and_error_calc(data, mean):
 	#Calculate covmat for each category
 	covmat = []
 	for i in range(0,10):
@@ -87,6 +84,8 @@ def main():
 	    data_norm.append(data[i].astype(float))
 	    for j in range(0,len(data[i])):
 	        data_norm[i][j] = data_norm[i][j] - mean[i]
+
+	print('WOW')
 
 	#Find matrix of eigenvectors for covmat
 	eig = []
@@ -102,12 +101,52 @@ def main():
 	    error.append(eig[i][0].sum() - sum_20)
 
 	#plotting and displaying the error
-	
 	df_error = pd.DataFrame(error)
 	bar_graph = df_error.plot(kind='bar',title='PCA Error Per Category', figsize=(10,8),fontsize=12, legend=False)
 	bar_graph.set_ylabel("Error",fontsize=12)
 	bar_graph.set_xlabel("Category",fontsize=12)
 	plt.show()
+
+
+def pca_calc(mean):
+	sol = list()
+	N = len(mean)
+	for i in range(N):
+		D = list()
+		for j in range(N):
+			diff = mean[i]-mean[j]
+			D_2 = np.dot(diff, diff)
+			D.append(D_2)
+		sol.append(D)
+	sol = np.array(sol)
+	A = np.eye(N) - np.outer(np.ones(N),np.ones(N))/N
+	W = 0.5*np.matmul(np.matmul(A,sol),np.transpose(A))
+
+	#calc eigen vals, vecs of W
+	eigval, eigvec = np.linalg.eig(W)
+
+	print(eigvec)
+	return sol
+
+
+def main():
+	df = get_data()
+
+	#Separate data by labels and compute mean image for each label
+	data, mean = [], []
+	for i in range(0,10):
+	    data.append(df[df['labels']==i])
+	    data[i] = data[i].drop(['labels'],axis=1)
+	    mean_arr = np.mean(data[i],axis=0)
+	    mean.append(mean_arr)
+	    data[i] = data[i].as_matrix()
+
+	#print_mean(mean)
+	#covmat_and_error_calc(data, mean)
+	D = pca_calc(mean)
+	return
+
+	
 
 
 if '__main__' == __name__:
