@@ -1,3 +1,9 @@
+
+# coding: utf-8
+
+# In[1]:
+
+
 import pickle
 import pprint
 import numpy as np
@@ -5,6 +11,10 @@ import pandas as pd
 from skimage import io
 import matplotlib.pyplot as plt
 from PIL import Image
+
+
+# In[4]:
+
 
 def unpickle(file):
     with open(file, 'rb') as fo:
@@ -16,45 +26,53 @@ results_dir = '../results/'
 names = ['airplane','automobile','bird','cat','deer','dog','frog','horse','ship','truck']
 
 
+# In[19]:
+
+
 def get_data():
-	#unpickle items
-	data_batch_1 = unpickle(data_dir + 'data_batch_1')
-	data_batch_2 = unpickle(data_dir + 'data_batch_2')
-	data_batch_3 = unpickle(data_dir + 'data_batch_3')
-	data_batch_4 = unpickle(data_dir + 'data_batch_4')
-	data_batch_5 = unpickle(data_dir + 'data_batch_5')
-	test_batch = unpickle(data_dir + 'test_batch')
+    #unpickle items
+    data_batch_1 = unpickle('data_batch_1')
+    data_batch_2 = unpickle('data_batch_2')
+    data_batch_3 = unpickle('data_batch_3')
+    data_batch_4 = unpickle('data_batch_4')
+    data_batch_5 = unpickle('data_batch_5')
+    test_batch = unpickle('test_batch')
 	
 	# for k in data_batch_1.keys():
 	# 	print(len(data_batch_1[k]))
 
 	#data items
-	data1 = data_batch_1[b'data']
-	data2 = data_batch_2[b'data']
-	data3 = data_batch_3[b'data']
-	data4 = data_batch_4[b'data']
-	data5 = data_batch_5[b'data']
-	test = test_batch[b'data']
+    data1 = data_batch_1[b'data']
+    data2 = data_batch_2[b'data']
+    data3 = data_batch_3[b'data']
+    data4 = data_batch_4[b'data']
+    data5 = data_batch_5[b'data']
+    test = test_batch[b'data']
 
 	#label items
-	data_label_1 = data_batch_1[b'labels']
-	data_label_2 = data_batch_2[b'labels']
-	data_label_3 = data_batch_3[b'labels']
-	data_label_4 = data_batch_4[b'labels']
-	data_label_5 = data_batch_5[b'labels']
-	test_label = test_batch[b'labels']
+    data_label_1 = data_batch_1[b'labels']
+    data_label_2 = data_batch_2[b'labels']
+    data_label_3 = data_batch_3[b'labels']
+    data_label_4 = data_batch_4[b'labels']
+    data_label_5 = data_batch_5[b'labels']
+    test_label = test_batch[b'labels']
 
 	#concatenated items
-	data = np.concatenate([data1,data2,data3,data4,data5,test],axis=0)
+    data = np.concatenate([data1,data2,data3,data4,data5,test],axis=0)
 
 	#IDing acc to data frames
-	labels = np.concatenate([data_label_1, data_label_2, data_label_3, data_label_4, data_label_5,test_label])
-	df_data = pd.DataFrame(data)
-	df_labels = pd.Series(labels, name="labels")
-	df_labels = pd.DataFrame(df_labels)
-	df = pd.concat([df_data,df_labels],axis=1)
-	return df
+    labels = np.concatenate([data_label_1, data_label_2, data_label_3, data_label_4, data_label_5,test_label])
+    df_data = pd.DataFrame(data)
+    df_labels = pd.Series(labels, name="labels")
+    df_labels = pd.DataFrame(df_labels)
+    df = pd.concat([df_data,df_labels],axis=1)
 
+    return df
+
+
+
+
+# In[10]:
 
 
 def print_mean(mean):
@@ -70,6 +88,8 @@ def print_mean(mean):
 	return
 
 
+# In[12]:
+
 
 def covmat_and_error_calc(data, mean):
 	#Calculate covmat for each category
@@ -83,6 +103,8 @@ def covmat_and_error_calc(data, mean):
 	    data_norm.append(data[i].astype(float))
 	    for j in range(0,len(data[i])):
 	        data_norm[i][j] = data_norm[i][j] - mean[i]
+
+	print('WOW')
 
 	#Find matrix of eigenvectors for covmat
 	eig = []
@@ -105,6 +127,9 @@ def covmat_and_error_calc(data, mean):
 	plt.show()
 
 
+# In[38]:
+
+
 def pca_calc(mean):
 	sol = list()
 	N = len(mean)
@@ -121,50 +146,30 @@ def pca_calc(mean):
 
 	#calc eigen vals, vecs of W
 	eigval, eigvec = np.linalg.eig(W)
-	diag = np.matmul(np.matmul(eigvec.transpose(),W), eigvec)
-	diag2d = diag[0:2,0:2]
-	diag2d[0][1] = diag2d[1][0] = 0
-	diag_2d_sqrt = np.sqrt(diag2d)
+	diag = np.matmul(eigvec.transpose(),W)
+	diag = np.matmul(diag,eigvec)
+	diag_2d = diag[0:2,0:2]
+	diag_2d_sqrt = np.sqrt(diag_2d)
 	eigvec_2d = W[:,0:2]
 	v = np.matmul(diag_2d_sqrt,eigvec_2d.transpose())
-
-	for i in range(len(mean)):
-		x = v[0][i]
-		y = v[1][i]
-		plt.plot(x, y, 'bo')
-		plt.text(x * (1 + 0.05), y * (1 - 0.1), names[i], fontsize=12)
-	plt.show()
-	return
+	print(v)
+	return sol
 
 
-def pca_similarity(data, mean):
-	pass
-
-def main():
-	df = get_data()
-
-	#Separate data by labels and compute mean image for each label
-	data, mean = [], []
-	for i in range(0,10):
-	    data.append(df[df['labels']==i])
-	    data[i] = data[i].drop(['labels'],axis=1)
-	    mean_arr = np.mean(data[i],axis=0)
-	    mean.append(mean_arr)
-	    data[i] = data[i].as_matrix()
-
-	#PART 1
-	#print_mean(mean)
-	#covmat_and_error_calc(data, mean)
-
-	#PART 2
-	#pca_calc(mean)
-	return
-
-	#PART 3
-	pca_similarity(data, mean)
-	return
+# In[39]:
 
 
-if '__main__' == __name__:
-	main()
-	print('SUCCESS')
+df = get_data()
+
+#Separate data by labels and compute mean image for each label
+data, mean = [], []
+for i in range(0,10):
+    data.append(df[df['labels']==i])
+    data[i] = data[i].drop(['labels'],axis=1)
+    mean_arr = np.mean(data[i],axis=0)
+    mean.append(mean_arr)
+    data[i] = data[i].as_matrix()
+#print_mean(mean)
+#covmat_and_error_calc(data, mean)
+D = pca_calc(mean)
+
