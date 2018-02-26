@@ -125,6 +125,8 @@ def pca_common_func(sol):
 		plt.plot(x, y, 'bo')
 		plt.text(x * (1 + 0.05), y * (1 - 0.1), names[i], fontsize=12)
 	plt.show()
+	print('4 SUCESS')
+	
 	return
 
 #PART2
@@ -145,6 +147,7 @@ def pca_calc(mean):
 
 #PART3
 def pca_similarity(data, mean):
+	print('1 SUCESS')
 	#create covmat, eigvec
 	covmat, eigvec = [], []
 	for i in range(len(mean)):
@@ -157,15 +160,38 @@ def pca_similarity(data, mean):
 	for i in range(len(mean)):
 		eigvec[i][:, pca_dim:] = 0
 
+	print('2 SUCESS')
+
+
+	#find error matrix
+	cond_err_mat = np.zeros((len(mean), len(mean)))
+	err = np.zeros((len(mean), len(mean)))
 	transformed_data = np.zeros(data.shape)
 	for i in range(len(mean)):
 		mn = mean[i]
-		sum_mat = np.zeros(data[0].shape)
-		for j in range(pca_dim):
-			sum_mat += np.outer(np.dot(data[i]-mn, eigvec[i][:,j].reshape((-1,1))),eigvec[i][:,j])
-		transformed_data[i][:] = sum_mat + mn
-	#pca_common_func(err_vals)
+		for j in range(len(mean)):
+			sum_mat = np.zeros(data[0].shape)
+			new_data = np.zeros(data[0].shape)
+			for k in range(pca_dim):
+				sum_mat += np.outer(np.dot(data[i]-mn, eigvec[j][:,k].reshape((-1,1))),eigvec[j][:,k])
+			sum_mat += mn
+			new_data = data[i] - sum_mat
+			new_data = np.multiply(new_data, new_data)
+			sum_rows = np.sum(new_data, axis=1)
+			avg = np.mean(sum_rows)
+			cond_err_mat[i][j] = avg
+
+	print('3 SUCESS')
+
+	for i in range(len(mean)):
+		for j in range(len(mean)):
+			err[i][j] = (cond_err_mat[i][j] + cond_err_mat[j][i])/2
+
+	print('4 SUCESS')
+
+	pca_common_func(err)
 	return
+
 
 def main():
 	df = get_data()
