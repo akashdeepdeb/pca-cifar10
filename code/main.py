@@ -14,7 +14,7 @@ def unpickle(file):
 data_dir = '../data/'
 results_dir = '../results/'
 names = ['airplane','automobile','bird','cat','deer','dog','frog','horse','ship','truck']
-
+pca_dim = 20
 
 def get_data():
 	#unpickle items
@@ -70,30 +70,31 @@ def print_mean(mean):
 	return
 
 
-
+#PART1
 def covmat_and_error_calc(data, mean):
 	#Calculate covmat for each category
 	covmat = []
-	for i in range(0,10):
+	for i in range(10):
 	    covmat.append(np.cov(data[i],rowvar=False))
 
-	#data_norm calculation
-	data_norm = []
-	for i in range(0,10):    
-	    data_norm.append(data[i].astype(float))
-	    for j in range(0,len(data[i])):
-	        data_norm[i][j] = data_norm[i][j] - mean[i]
+	eig = []
+	for i in range(10):
+	    eig.append(np.linalg.eig(covmat[i]))
+
+	# #data_norm calculation
+	# data_norm = []
+	# for i in range(0,10):    
+	#     data_norm.append(data[i].astype(float))
+	#     for j in range(0,len(data[i])):
+	#         data_norm[i][j] = data_norm[i][j] - mean[i]
 
 	#Find matrix of eigenvectors for covmat
-	eig = []
-	for i in range(0,10):
-	    eig.append(np.linalg.eig(covmat[i]))
 
 	#error calculation
 	error = []
-	for i in range(0,10):
+	for i in range(10):
 	    sum_20 = 0
-	    for j in range(0,20):
+	    for j in range(pca_dim):
 	        sum_20 += eig[i][0][j]
 	    error.append(eig[i][0].sum() - sum_20)
 
@@ -105,17 +106,7 @@ def covmat_and_error_calc(data, mean):
 	plt.show()
 
 
-def pca_calc(mean):
-	sol = list()
-	N = len(mean)
-	for i in range(N):
-		D = list()
-		for j in range(N):
-			diff = mean[i]-mean[j]
-			D_2 = np.dot(diff, diff)
-			D.append(D_2)
-		sol.append(D)
-	sol = np.array(sol)
+def pca_common_func(sol):
 	A = np.eye(N) - np.outer(np.ones(N),np.ones(N))/N
 	W = -0.5*np.matmul(np.matmul(A,sol),np.transpose(A))
 
@@ -136,9 +127,45 @@ def pca_calc(mean):
 	plt.show()
 	return
 
+#PART2
+def pca_calc(mean):
+	sol = list()
+	N = len(mean)
+	for i in range(N):
+		D = list()
+		for j in range(N):
+			diff = mean[i]-mean[j]
+			D_2 = np.dot(diff, diff)
+			D.append(D_2)
+		sol.append(D)
+	sol = np.array(sol)
+	pca_common_func(sol)
+	return
 
+
+#PART3
 def pca_similarity(data, mean):
-	pass
+	#create covmat, eigvec
+	covmat, eigvec = [], []
+	for i in range(len(mean)):
+	    covmat.append(np.cov(data[i],rowvar=False))
+	for i in range(len(mean)):
+	    eigvec.append(np.linalg.eig(covmat[i])[1])
+	covmat, eigvec = np.array(covmat), np.array(eigvec)
+	
+	#set everything after 20 to zero
+	for i in range(len(mean)):
+		eigvec[i][:, pca_dim:] = 0
+
+	transformed_data = np.zeros(data.shape)
+	for i in range(len(mean)):
+		mn = mean[i]
+		sum_mat = np.zeros(data[0].shape)
+		for j in range(pca_dim):
+			sum_mat += np.outer(np.dot(data[i]-mn, eigvec[i][:,j].reshape((-1,1))),eigvec[i][:,j])
+		transformed_data[i][:] = sum_mat + mn
+	#pca_common_func(err_vals)
+	return
 
 def main():
 	df = get_data()
@@ -158,10 +185,9 @@ def main():
 
 	#PART 2
 	#pca_calc(mean)
-	return
 
 	#PART 3
-	pca_similarity(data, mean)
+	pca_similarity(np.array(data), np.array(mean))
 	return
 
 
