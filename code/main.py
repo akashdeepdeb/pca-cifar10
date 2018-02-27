@@ -25,9 +25,6 @@ def get_data():
 	data_batch_5 = unpickle(data_dir + 'data_batch_5')
 	test_batch = unpickle(data_dir + 'test_batch')
 	
-	# for k in data_batch_1.keys():
-	# 	print(len(data_batch_1[k]))
-
 	#data items
 	data1 = data_batch_1[b'data']
 	data2 = data_batch_2[b'data']
@@ -64,8 +61,6 @@ def print_mean(mean):
 		im_arr[..., 0] = im[:1024].reshape((32,32))
 		im_arr[..., 1] = im[1024:2048].reshape((32,32))
 		im_arr[..., 2] = im[2048:].reshape((32,32))
-		#matplotlib.image.imsave(results_dir + names[i] + '_mean.png', im)
-		#io.imsave(results_dir + names[i] + '_mean.png', im)
 		Image.fromarray(im_arr, 'RGB').save(results_dir + names[i] + '_mean.png')
 	return
 
@@ -80,15 +75,6 @@ def covmat_and_error_calc(data, mean):
 	eig = []
 	for i in range(10):
 	    eig.append(np.linalg.eig(covmat[i]))
-
-	# #data_norm calculation
-	# data_norm = []
-	# for i in range(0,10):    
-	#     data_norm.append(data[i].astype(float))
-	#     for j in range(0,len(data[i])):
-	#         data_norm[i][j] = data_norm[i][j] - mean[i]
-
-	#Find matrix of eigenvectors for covmat
 
 	#error calculation
 	error = []
@@ -106,10 +92,9 @@ def covmat_and_error_calc(data, mean):
 	plt.show()
 
 
+# USED BY PART 2 AND PART 3
 def pca_common_func(sol, mean):
-
 	N = len(mean) #ADDED AFTER TEST
-
 	A = np.eye(N) - np.outer(np.ones(N),np.ones(N))/N
 	W = -0.5*np.matmul(np.matmul(A,sol),np.transpose(A))
 
@@ -129,7 +114,6 @@ def pca_common_func(sol, mean):
 		plt.text(x * (1 + 0.05), y * (1 - 0.1), names[i], fontsize=12)
 	plt.show()
 	print('4 SUCESS')
-	
 	return
 
 
@@ -200,7 +184,7 @@ def pca_similarity(data, mean):
 	pca_common_func(err, mean)
 	return
 
-
+# THE MAIN FUNCTION
 def main():
 	df = get_data()
 
@@ -213,15 +197,19 @@ def main():
 	    mean.append(mean_arr)
 	    data[i] = data[i].as_matrix()
 
+	#########################################
+	# THESE FUNCTIONS SHOULD BE UNIT TESTED #
+	#########################################
+
 	#PART 1
-	#print_mean(mean)
-	#covmat_and_error_calc(data, mean)
+	print_mean(mean)
+	covmat_and_error_calc(data, mean)
 
 	#PART 2
 	pca_calc(mean)
 
 	#PART 3
-	#pca_similarity(np.array(data), np.array(mean))
+	pca_similarity(np.array(data), np.array(mean))
 	return
 
 
