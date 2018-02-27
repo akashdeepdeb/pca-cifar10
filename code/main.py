@@ -106,7 +106,10 @@ def covmat_and_error_calc(data, mean):
 	plt.show()
 
 
-def pca_common_func(sol):
+def pca_common_func(sol, mean):
+
+	N = len(mean) #ADDED AFTER TEST
+
 	A = np.eye(N) - np.outer(np.ones(N),np.ones(N))/N
 	W = -0.5*np.matmul(np.matmul(A,sol),np.transpose(A))
 
@@ -129,6 +132,7 @@ def pca_common_func(sol):
 	
 	return
 
+
 #PART2
 def pca_calc(mean):
 	sol = list()
@@ -141,7 +145,8 @@ def pca_calc(mean):
 			D.append(D_2)
 		sol.append(D)
 	sol = np.array(sol)
-	pca_common_func(sol)
+	np.savetxt('../results/part_2/part2_error_matrix.txt', sol)
+	pca_common_func(sol, mean)
 	return
 
 
@@ -162,19 +167,22 @@ def pca_similarity(data, mean):
 
 	print('2 SUCESS')
 
-
 	#find error matrix
 	cond_err_mat = np.zeros((len(mean), len(mean)))
 	err = np.zeros((len(mean), len(mean)))
+
+	data = np.array(data) #ADDED AFTER TEST
+
 	transformed_data = np.zeros(data.shape)
 	for i in range(len(mean)):
 		mn = mean[i]
+		mn_mat = np.tile(mn, (len(data[i]),1)) #ADDED AFTER TEST
 		for j in range(len(mean)):
 			sum_mat = np.zeros(data[0].shape)
 			new_data = np.zeros(data[0].shape)
 			for k in range(pca_dim):
-				sum_mat += np.outer(np.dot(data[i]-mn, eigvec[j][:,k].reshape((-1,1))),eigvec[j][:,k])
-			sum_mat += mn
+				sum_mat += np.outer(np.dot(data[i]-mn_mat, eigvec[j][:,k].reshape((-1,1))),eigvec[j][:,k])
+			sum_mat += mn_mat #REPLACE INSTANCES OF MN WITH MN_MAT
 			new_data = data[i] - sum_mat
 			new_data = np.multiply(new_data, new_data)
 			sum_rows = np.sum(new_data, axis=1)
@@ -188,8 +196,8 @@ def pca_similarity(data, mean):
 			err[i][j] = (cond_err_mat[i][j] + cond_err_mat[j][i])/2
 
 	print('4 SUCESS')
-
-	pca_common_func(err)
+	np.savetxt('part3_error_matrix.txt', err)
+	pca_common_func(err, mean)
 	return
 
 
@@ -210,10 +218,10 @@ def main():
 	#covmat_and_error_calc(data, mean)
 
 	#PART 2
-	#pca_calc(mean)
+	pca_calc(mean)
 
 	#PART 3
-	pca_similarity(np.array(data), np.array(mean))
+	#pca_similarity(np.array(data), np.array(mean))
 	return
 
 
